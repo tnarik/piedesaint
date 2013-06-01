@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.name          = "piedesaint"
   spec.version       = Piedesaint::VERSION
   spec.authors       = ["Tnarik Innael"]
-  spec.email         = ["tnarik@lecafeautomatique.co.uk"]
+  spec.email         = ["tnarik@gmail.com"]
   spec.description   = %q{Drop-in web server}
   spec.summary       = %q{Drop-in web server to serve files and tar'ed directories}
   spec.homepage      = "https://github.com/tnarik/piedesaint"
