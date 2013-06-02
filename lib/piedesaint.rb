@@ -144,7 +144,7 @@ module Piedesaint
     Gem::Package::TarWriter.new(tar) do |tarwriter|
       Dir[File.join(path, "**/{*,.*}")].each do |file|
         mode = File.stat(file).mode
-        relative_file = file.sub /^#{Regexp::escape path}\/?/, ''
+        relative_file = File.join(File.basename(path), file.sub(/^#{Regexp::escape path}\/?/, ''))
 
         if File.directory? file
           next if [ ".", ".."].include? File.basename(file)

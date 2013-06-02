@@ -8,7 +8,11 @@ Gem::Specification.new do |spec|
   spec.version       = Piedesaint::VERSION
   spec.authors       = ["Tnarik Innael"]
   spec.email         = ["tnarik@gmail.com"]
-  spec.description   = %q{Drop-in web server}
+  spec.description   = <<-EOF
+Drop-in web server to serve files and tar'ed directories.
+Use it as a tool to make available databse backups, installation packages that don't support automatic download, full GIT bare repositories, etc. for Chef Opscode cookbooks based on remote files.
+Underlying it uses Puma, Basic Auth, SSL and SSL enforcing.
+EOF
   spec.summary       = %q{Drop-in web server to serve files and tar'ed directories}
   spec.homepage      = "https://github.com/tnarik/piedesaint"
   spec.license       = "MIT"

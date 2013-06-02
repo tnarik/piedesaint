@@ -10,6 +10,8 @@ It was born from the need of having the simplest web server possible (while stil
 
 It also serves directories (packaging them on the fly) as a single resource.
 
+This is useful in the case of using chef-solo (combined with Vagrant, for instance, for testing) when database backups or internal git repositories or installation packages need to be transported to the client node but adding those packages to our cookbooks is not wanted or possible.
+
 ## Installation
 
 You can add this line to your application's Gemfile:
@@ -37,6 +39,7 @@ By default the configuration will serve the current directory, unless a list of 
 After this, whenever you want to serve the files/directories, just execute:
 
 	$ sug
+
 
 ## License
 
