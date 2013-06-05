@@ -18,7 +18,7 @@ module Piedesaint
       piedesanto.start
     end
 
-    def init ( parameters )
+    def init ( parameters = [] )
       if File.exist?(".piedesaint")
         abort "Configuration already exists at #{Dir.pwd}/.piedesaint"
       end
@@ -39,6 +39,7 @@ module Piedesaint
                     cert: File.join(".", ".piedesaint", "ssl", "server.crt" ),
                     username: "user",
                     password: "password",
+                    freshness: 3600,
                     folders: parameters }
 
         open 'config', 'w' do |io| io.write config.to_yaml end

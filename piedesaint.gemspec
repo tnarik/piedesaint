@@ -29,4 +29,6 @@ EOF
   # runtime dependencies
   spec.add_dependency "puma", "~>1.6.3"
   spec.add_dependency "rack-ssl-enforcer"
+  spec.add_dependency "rack-cache"
+
 end

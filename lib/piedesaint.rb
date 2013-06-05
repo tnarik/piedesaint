@@ -6,8 +6,11 @@ require 'puma/events'
 require 'openssl'
 
 require 'rack/ssl-enforcer'
+require 'rack/cache'
+
 require 'rubygems/package'
 require "stringio"
+require 'time'
 
 
 module Piedesaint
@@ -15,17 +18,32 @@ module Piedesaint
   module Rack
     class DirectoryCompress < ::Rack::Directory
       def list_directory
-        return [200, {}, ::Piedesaint.tar(@path)]
+        tarball = ::Piedesaint.tar(@path)
+        etag = Digest::MD5.base64digest tarball.string
+        headers = {"Cache-Control" => "public", "ETag" => etag }
+
+        return [304, headers, []] if etag == @env['HTTP_IF_NONE_MATCH']
+        return [200, headers, tarball]
       end
     end
 
-    class DirectoriesCompress
-      def initialize(roots, app=nil)
+    class FileEtag < ::Rack::File
+      def serving(env)
+        etag = Digest::MD5.file(@path).base64digest
+        @headers['Cache-Control'] = "public"
+        @headers['ETag'] = etag
+        super
+      end
+    end
+
+    class DirectoriesTraversal
+      def initialize(options, app=nil)
         @apps = []
-        roots.each do |root|
+        @options = options.dup
+        @options[:folders].each do |root|
           root = File.expand_path root
           puts "Service root: #{root}"
-          @apps << Rack::DirectoryCompress.new(root, app)
+          @apps << Rack::DirectoryCompress.new(root, app ? app : Rack::FileEtag.new(root) )
         end
       end
 
@@ -61,9 +79,13 @@ module Piedesaint
       use ::Rack::Auth::Basic, "Icecreamland" do |username, password|
         ( options[:username] == username ) && ( options[:password] == password )
       end
-      
+      use ::Rack::Deflater
+      use ::Rack::Cache, verbose: true,
+          metastore: 'file:/tmp/rack/meta',
+          entitystore: 'file:/tmp/rack/body',
+          default_ttl: options[:freshness]
       map "/" do
-        run Rack::DirectoriesCompress.new(options[:folders])
+        run Rack::DirectoriesTraversal.new(options)
       end
     end
   end
@@ -90,7 +112,7 @@ module Piedesaint
     puma.add_ssl_listener options[:host], options[:https_port], ctx
 
     puma.min_threads = 1
-    puma.max_threads = 1
+    puma.max_threads = 10
 
     begin
       Signal.trap "SIGUSR2" do
@@ -116,10 +138,10 @@ module Piedesaint
       graceful_stop puma
     end
 
-  if @restart
-    p "* Restarting..."
-    @status.stop true if @status
-    restart!
+    if @restart
+      p "* Restarting..."
+      @status.stop true if @status
+      restart!
     end
   end
 
@@ -128,17 +150,9 @@ module Piedesaint
     p " - Gracefully stopping, waiting for requests to finish"
     @status.stop(true) if @status
     puma.stop(true)
-    delete_pidfile
     p " - Goodbye!"
   end
 
-  def self.delete_pidfile
-    #¢if path = @options[:pidfile]
-    # File.unlink path
-   #end
-  end
-
-  
   def self.tar(path)
     tar = StringIO.new
     Gem::Package::TarWriter.new(tar) do |tarwriter|
