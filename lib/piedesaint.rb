@@ -11,6 +11,7 @@ require 'rack/cache'
 require 'rubygems/package'
 require "stringio"
 require 'time'
+require "uri"
 
 
 module Piedesaint
@@ -131,9 +132,6 @@ module Piedesaint
     begin
       Signal.trap "SIGUSR2" do
         @restart = true
-
-        puts "Service starting at #{options[:http_port]} -> #{options[:https_port]}"
-
         puma.begin_restart
       end
     rescue Exception
@@ -150,6 +148,7 @@ module Piedesaint
     end
     
     begin
+      puts "Service starting at #{options[:http_port]} -> #{options[:https_port]}"
       puma.run.join
     rescue Interrupt
       graceful_stop puma
