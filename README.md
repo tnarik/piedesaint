@@ -40,6 +40,7 @@ After this, whenever you want to serve the files/directories, just execute:
 
 	$ sug
 
+Alternatively, by editing ```.piedesaint/config```, you can disable compressed folders (```:tar: false```) and the need for Basic Authorization credentials (using an empty ```:username:```).
 
 ## License
 

@@ -43,7 +43,7 @@ module Piedesaint
         @options[:folders].each do |root|
           root = File.expand_path root
           puts "Service root: #{root}"
-          @apps << Rack::DirectoryCompress.new(root, app ? app : Rack::FileEtag.new(root) )
+          @apps << ( @options[:tar] ? Rack::DirectoryCompress.new(root, app ? app : Rack::FileEtag.new(root)) : ::Rack::Directory.new(root) )
         end
       end
 
@@ -76,8 +76,12 @@ module Piedesaint
       use ::Rack::ShowExceptions
       use ::Rack::SslEnforcer, http_port: options[:http_port], https_port: options[:https_port]
       use ::Rack::Deflater
-      use ::Rack::Auth::Basic, "Icecreamland" do |username, password|
-        ( options[:username] == username ) && ( options[:password] == password )
+      if options[:username].nil? or options[:username].empty?
+        puts "Service without Basic Authentication"
+      else
+        use ::Rack::Auth::Basic, "Icecreamland" do |username, password|
+          ( options[:username] == username ) && ( options[:password] == password )
+        end
       end
       use ::Rack::Deflater
       use ::Rack::Cache, verbose: true,
@@ -87,6 +91,8 @@ module Piedesaint
       map "/" do
         run Rack::DirectoriesTraversal.new(options)
       end
+      puts "Serving tar'ed folders" if options[:tar]
+      puts "Service started at #{options[:http_port]} -> #{options[:https_port]}"
     end
   end
 

@@ -40,6 +40,7 @@ module Piedesaint
                     username: "user",
                     password: "password",
                     freshness: 3600,
+                    tar: true,
                     folders: parameters }
 
         open 'config', 'w' do |io| io.write config.to_yaml end
