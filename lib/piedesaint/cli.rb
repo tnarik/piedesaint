@@ -40,6 +40,8 @@ module Piedesaint
                     username: "user",
                     password: "password",
                     freshness: 3600,
+                    metastore: 'file:/tmp/rack/meta',
+                    entitystore: 'file:/tmp/rack/body',
                     tar: true,
                     folders: parameters }
 

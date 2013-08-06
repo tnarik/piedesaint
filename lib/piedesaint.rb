@@ -76,6 +76,7 @@ module Piedesaint
       use ::Rack::ShowExceptions
       use ::Rack::SslEnforcer, http_port: options[:http_port], https_port: options[:https_port]
       use ::Rack::Deflater
+
       if options[:username].nil? or options[:username].empty?
         puts "Service without Basic Authentication"
       else
@@ -83,16 +84,23 @@ module Piedesaint
           ( options[:username] == username ) && ( options[:password] == password )
         end
       end
+
       use ::Rack::Deflater
-      use ::Rack::Cache, verbose: true,
-          metastore: 'file:/tmp/rack/meta',
-          entitystore: 'file:/tmp/rack/body',
-          default_ttl: options[:freshness]
+
+      if options[:metastore].nil? or options[:metastore].empty?
+        puts "Service without cache"
+      else
+        use ::Rack::Cache, verbose: true,
+            metastore: options[:metastore],
+            entitystore: options[:entitystore],
+            default_ttl: options[:freshness]
+        puts "Service cache at #{options[:metastore]} / #{options[:entitystore]}"
+      end
+
       map "/" do
         run Rack::DirectoriesTraversal.new(options)
       end
       puts "Serving tar'ed folders" if options[:tar]
-      puts "Service started at #{options[:http_port]} -> #{options[:https_port]}"
     end
   end
 
@@ -123,6 +131,9 @@ module Piedesaint
     begin
       Signal.trap "SIGUSR2" do
         @restart = true
+
+        puts "Service starting at #{options[:http_port]} -> #{options[:https_port]}"
+
         puma.begin_restart
       end
     rescue Exception
