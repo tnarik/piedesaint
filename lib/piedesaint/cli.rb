@@ -51,6 +51,19 @@ module Piedesaint
       puts "Configuration created at #{Dir.pwd}/.piedesaint"
     end
 
+    def cert ( cert_subject = 'CN=Piedesaint' )
+      key, cert = create_ssl_artifacts
+
+      FileUtils.mkdir_p ".piedesaint"
+      FileUtils.cd ".piedesaint" do
+        FileUtils.mkdir_p "ssl"
+        FileUtils.cd "ssl" do
+          open 'server.key', 'w' do |io| io.write key.to_pem end
+          open 'server.crt', 'w' do |io| io.write cert.to_pem end
+        end
+      end
+    end
+
     private
     def load_config
       config_path = find_default_config_path
@@ -61,7 +74,7 @@ module Piedesaint
       @config = YAML.load_file File.join(config_path, "config")
     end
 
-    def create_ssl_artifacts
+    def create_ssl_artifacts ( cert_subject = 'CN=Piedesaint' )
       key = OpenSSL::PKey::RSA.new 2048
 
       cert = OpenSSL::X509::Certificate.new
@@ -70,7 +83,7 @@ module Piedesaint
       cert.not_before = Time.now
       cert.not_after = Time.now + 3 * 3600
       cert.public_key = key.public_key
-      name = OpenSSL::X509::Name.parse 'CN=Piedesaint'
+      name = OpenSSL::X509::Name.parse cert_subject
       cert.subject = name
       cert.issuer = name
       cert.sign key, OpenSSL::Digest::SHA1.new

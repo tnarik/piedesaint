@@ -1,5 +1,11 @@
 # Piedesaint
 
+[![Build Status](http://img.shields.io/travis/tnarik/piedesaint.svg)](https://travis-ci.org/tnarik/piedesaint)
+[![Code Climate](http://img.shields.io/codeclimate/github/tnarik/piedesaint.svg)](https://codeclimate.com/github/tnarik/piedesaint)
+[![Coveralls](http://img.shields.io/coveralls/tnarik/piedesaint.svg)](https://coveralls.io/r/tnarik/piedesaint)
+[![RubyGems](http://img.shields.io/gem/v/piedesaint.svg)](http://rubygems.org/gems/piedesaint)
+[![Gemnasium](http://img.shields.io/gemnasium/tnarik/piedesaint.svg)](https://gemnasium.com/tnarik/piedesaint)
+
 ## In short
 
 [Piedesaint](https://github.com/tnarik/piedesaint) is a minimal web server designed to expose directly files and directories (in [TAR](http://en.wikipedia.org/wiki/Tar_(computing) format) via HTTP or HTTPS.
