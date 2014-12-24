@@ -75,7 +75,9 @@ module Piedesaint
     ::Rack::Builder.app do 
       use ::Rack::CommonLogger
       use ::Rack::ShowExceptions
-      use ::Rack::SslEnforcer, http_port: options[:http_port], https_port: options[:https_port]
+      if ( !options[:key].nil? and !options[:key].empty? )
+        use ::Rack::SslEnforcer, http_port: options[:http_port], https_port: options[:https_port]
+      end
       use ::Rack::Deflater
 
       if options[:username].nil? or options[:username].empty?
@@ -118,13 +120,15 @@ module Piedesaint
     #ctx.cert = "./server.crt"
     #ctx.verify_mode = ::Puma::MiniSSL::VERIFY_NONE
 
-    ctx = ::OpenSSL::SSL::SSLContext.new
-    ctx.key = OpenSSL::PKey::RSA.new File.read(options[:key])
-    ctx.cert = OpenSSL::X509::Certificate.new File.read(options[:cert])
-    ctx.verify_mode = ::OpenSSL::SSL::VERIFY_NONE
-
     puma.add_tcp_listener options[:host], options[:http_port]
-    puma.add_ssl_listener options[:host], options[:https_port], ctx
+
+    if ( !options[:key].nil? and !options[:key].empty? )
+      ctx = ::OpenSSL::SSL::SSLContext.new
+      ctx.key = OpenSSL::PKey::RSA.new File.read(options[:key])
+      ctx.cert = OpenSSL::X509::Certificate.new File.read(options[:cert])
+      ctx.verify_mode = ::OpenSSL::SSL::VERIFY_NONE
+      puma.add_ssl_listener options[:host], options[:https_port], ctx
+    end
 
     puma.min_threads = 1
     puma.max_threads = 10
