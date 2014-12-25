@@ -23,7 +23,6 @@ EOF
   spec.require_paths = ["lib"]
 
   # development dependencies
-  spec.add_development_dependency "thor"
   spec.add_development_dependency "bundler", "~> 1.6"
   spec.add_development_dependency "rake"
 
