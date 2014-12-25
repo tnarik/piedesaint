@@ -24,7 +24,8 @@ EOF
 
   # development dependencies
   spec.add_development_dependency "thor"
-  spec.add_development_dependency "bundler", "~> 1.3"
+  spec.add_development_dependency "bundler", "~> 1.6"
+  spec.add_development_dependency "rake"
 
   # runtime dependencies
   spec.add_dependency "puma", "~>1.6.3"
