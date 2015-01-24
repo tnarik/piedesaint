@@ -120,14 +120,14 @@ module Piedesaint
     #ctx.cert = "./server.crt"
     #ctx.verify_mode = ::Puma::MiniSSL::VERIFY_NONE
 
-    puma.add_tcp_listener options[:host], options[:http_port]
+    puma.add_tcp_listener options[:iface], options[:http_port]
 
     if ( !options[:key].nil? and !options[:key].empty? )
       ctx = ::OpenSSL::SSL::SSLContext.new
       ctx.key = OpenSSL::PKey::RSA.new File.read(options[:key])
       ctx.cert = OpenSSL::X509::Certificate.new File.read(options[:cert])
       ctx.verify_mode = ::OpenSSL::SSL::VERIFY_NONE
-      puma.add_ssl_listener options[:host], options[:https_port], ctx
+      puma.add_ssl_listener options[:iface], options[:https_port], ctx
     end
 
     puma.min_threads = 1

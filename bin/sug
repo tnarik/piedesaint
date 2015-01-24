@@ -5,4 +5,4 @@ require 'piedesaint/cli'
 
 cli = Piedesaint::CLI.new
 cli.execute if ARGV.length == 0
-cli.send ARGV.shift, ARGV if ARGV.length >= 1
+cli.public_send ARGV.shift, ARGV if ARGV.length >= 1

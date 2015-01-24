@@ -14,6 +14,7 @@ module Piedesaint
 
     def execute
       load_config
+      cert(@config[:host]) if @config[:refresh_cert]
       piedesanto = Piedesaint.new @config
       piedesanto.start
     end
@@ -22,46 +23,31 @@ module Piedesaint
       if File.exist?(".piedesaint")
         abort "Configuration already exists at #{Dir.pwd}/.piedesaint"
       end
-      key, cert = create_ssl_artifacts
 
-      FileUtils.mkdir_p ".piedesaint"
-      FileUtils.cd ".piedesaint" do
-        FileUtils.mkdir_p "ssl"
-        FileUtils.cd "ssl" do
-          open 'server.key', 'w' do |io| io.write key.to_pem end
-          open 'server.crt', 'w' do |io| io.write cert.to_pem end
-        end
-
-        config = { host: "0.0.0.0",
-                    http_port: 8080,
-                    https_port: 9292,
-                    key: File.join(".", ".piedesaint", "ssl", "server.key" ),
-                    cert: File.join(".", ".piedesaint", "ssl", "server.crt" ),
-                    username: "user",
-                    password: "password",
-                    freshness: 3600,
-                    metastore: 'file:/tmp/rack/meta',
-                    entitystore: 'file:/tmp/rack/body',
-                    tar: true,
-                    folders: parameters }
-
-        open 'config', 'w' do |io| io.write config.to_yaml end
-      end
-
+      config = { iface: "0.0.0.0",
+                  http_port: 8080,
+                  https_port: 9292,
+                  refresh_cert: true,
+                  host: "localhost",
+                  key: File.join(".", ".piedesaint", "ssl", "server.key" ),
+                  cert: File.join(".", ".piedesaint", "ssl", "server.crt" ),
+                  username: "user",
+                  password: "password",
+                  freshness: 3600,
+                  metastore: 'file:/tmp/rack/meta',
+                  entitystore: 'file:/tmp/rack/body',
+                  tar: true,
+                  folders: parameters }
+      save_config config
+      cert
       puts "Configuration created at #{Dir.pwd}/.piedesaint"
     end
 
-    def cert ( cert_subject = 'CN=Piedesaint' )
-      key, cert = create_ssl_artifacts
-
-      FileUtils.mkdir_p ".piedesaint"
-      FileUtils.cd ".piedesaint" do
-        FileUtils.mkdir_p "ssl"
-        FileUtils.cd "ssl" do
-          open 'server.key', 'w' do |io| io.write key.to_pem end
-          open 'server.crt', 'w' do |io| io.write cert.to_pem end
-        end
-      end
+    def set_host ( host = [] )
+      load_config
+      @config[:host] = host[0]
+      save_config @config
+      cert host[0]
     end
 
     private
@@ -74,7 +60,27 @@ module Piedesaint
       @config = YAML.load_file File.join(config_path, "config")
     end
 
-    def create_ssl_artifacts ( cert_subject = 'CN=Piedesaint' )
+    def save_config ( config )
+      FileUtils.mkdir_p ".piedesaint"
+      FileUtils.cd ".piedesaint" do
+        open 'config', 'w' do |io| io.write config.to_yaml end
+      end
+    end
+
+    def cert ( cn = 'localhost' )
+      key, cert = create_ssl_artifacts cn
+
+      FileUtils.mkdir_p ".piedesaint"
+      FileUtils.cd ".piedesaint" do
+        FileUtils.mkdir_p "ssl"
+        FileUtils.cd "ssl" do
+          open 'server.key', 'w' do |io| io.write key.to_pem end
+          open 'server.crt', 'w' do |io| io.write cert.to_pem end
+        end
+      end
+    end
+
+    def create_ssl_artifacts ( cn = 'localhost' )
       key = OpenSSL::PKey::RSA.new 2048
 
       cert = OpenSSL::X509::Certificate.new
@@ -83,7 +89,7 @@ module Piedesaint
       cert.not_before = Time.now
       cert.not_after = Time.now + 3 * 3600
       cert.public_key = key.public_key
-      name = OpenSSL::X509::Name.parse cert_subject
+      name = OpenSSL::X509::Name.parse "CN=#{cn}"
       cert.subject = name
       cert.issuer = name
       cert.sign key, OpenSSL::Digest::SHA1.new
