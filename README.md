@@ -42,6 +42,12 @@ This creates the `.piedesaint` folder that you can inspect and configure (it con
 
 By default the configuration will serve the current directory, unless a list of folders is specified. If you want to serve a different folder or set of folders, just edit the configuration.
 
+Host can be set via:
+
+  $ sug set_host [host IP]
+
+This is useful/required so that the certificate is created with the correct IP and systems can validate it correctly.
+
 After this, whenever you want to serve the files/directories, just execute:
 
 	$ sug

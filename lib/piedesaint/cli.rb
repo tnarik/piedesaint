@@ -2,6 +2,7 @@ require 'piedesaint'
 
 require 'openssl'
 require 'yaml'
+require 'json'
 
 module Piedesaint
 
@@ -15,6 +16,7 @@ module Piedesaint
     def execute
       load_config
       cert(@config[:host]) if @config[:refresh_cert]
+      refresh_asset_provider if @config[:refresh_asset_provider]
       piedesanto = Piedesaint.new @config
       piedesanto.start
     end
@@ -33,6 +35,9 @@ module Piedesaint
                   cert: File.join(".", ".piedesaint", "ssl", "server.crt" ),
                   username: "user",
                   password: "password",
+                  asset_provider_config: "",
+                  asset_provider_helper_vagrantfile: "",
+                  refresh_asset_provider: true,
                   freshness: 3600,
                   metastore: 'file:/tmp/rack/meta',
                   entitystore: 'file:/tmp/rack/body',
@@ -48,6 +53,15 @@ module Piedesaint
       @config[:host] = host[0]
       save_config @config
       cert host[0]
+    end
+
+    def asset_provider ( parameters = [] )
+      load_config
+      asset_provider_helper_vagrantfile = parameters[0] || "chef_vagrant"
+      asset_provider_config = parameters[1] || File.join("kitchen", "nodes", "vagrant.json")
+      @config[:asset_provider_helper_vagrantfile] = asset_provider_helper_vagrantfile
+      @config[:asset_provider_config] = asset_provider_config
+      save_config @config
     end
 
     private
@@ -78,6 +92,19 @@ module Piedesaint
           open 'server.crt', 'w' do |io| io.write cert.to_pem end
         end
       end
+    end
+
+    def refresh_asset_provider
+      return if @config[:asset_provider_helper_vagrantfile].nil?
+      return if @config[:asset_provider_helper_vagrantfile].empty?
+      File.write(@config[:asset_provider_helper_vagrantfile], "trusted_certs_dir \"/vagrant/#{File.dirname(@config[:key])}\"")
+
+      return if @config[:asset_provider_config].nil?
+      return if @config[:asset_provider_config].empty?
+
+      asset_provider_config = JSON.parse(File.read(@config[:asset_provider_config]))
+      asset_provider_config["asset_provider"]["host"] = @config[:host]
+      File.write(@config[:asset_provider_config], JSON.pretty_generate(asset_provider_config))
     end
 
     def create_ssl_artifacts ( cn = 'localhost' )
