@@ -4,6 +4,9 @@ require 'openssl'
 require 'yaml'
 require 'json'
 
+# For automatic IP configuration (modes: *vmware-nat*)
+require 'socket'
+
 module Piedesaint
 
   # The CLI class encapsulates the behavior of Piedesaint when it is invoked
@@ -15,7 +18,7 @@ module Piedesaint
 
     def execute
       load_config
-      cert(@config[:host]) if @config[:refresh_cert]
+      cert( resolve_host(@config[:host])) if @config[:refresh_cert]
       refresh_asset_provider if @config[:refresh_asset_provider]
       piedesanto = Piedesaint.new @config
       piedesanto.start
@@ -52,7 +55,7 @@ module Piedesaint
       load_config
       @config[:host] = host[0]
       save_config @config
-      cert host[0]
+      cert( resolve_host(@config[:host]))
     end
 
     def asset_provider ( parameters = [] )
@@ -65,6 +68,18 @@ module Piedesaint
     end
 
     private
+    def resolve_host ( hostname )
+      case hostname
+        when "*vmware-nat*"
+          vmnet8_ifs = Socket.getifaddrs.select{ |ifaddr| ifaddr.name == 'vmnet8'  && ifaddr.addr.ip? }
+          return vmnet8_ifs[0].addr.ip_address
+        else
+        return hostname
+      end
+
+      return hostname
+    end
+
     def load_config
       config_path = find_default_config_path
       if config_path.nil?
