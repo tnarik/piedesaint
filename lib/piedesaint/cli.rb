@@ -18,7 +18,7 @@ module Piedesaint
 
     def execute
       load_config
-      cert( resolve_host(@config[:host])) if @config[:refresh_cert]
+      cert( resolve_host(@config[:host]) ) if @config[:refresh_cert]
       refresh_asset_provider if @config[:refresh_asset_provider]
       piedesanto = Piedesaint.new @config
       piedesanto.start
@@ -55,7 +55,7 @@ module Piedesaint
       load_config
       @config[:host] = host[0]
       save_config @config
-      cert( resolve_host(@config[:host]))
+      cert( resolve_host(@config[:host]) )
     end
 
     def asset_provider ( parameters = [] )
@@ -107,6 +107,7 @@ module Piedesaint
           open 'server.crt', 'w' do |io| io.write cert.to_pem end
         end
       end
+      puts "Created and install certificates for #{cn}"
     end
 
     def refresh_asset_provider
@@ -118,8 +119,10 @@ module Piedesaint
       return if @config[:asset_provider_config].empty?
 
       asset_provider_config = JSON.parse(File.read(@config[:asset_provider_config]))
-      asset_provider_config["asset_provider"]["host"] = @config[:host]
+      asset_provider_config["asset_provider"]["host"] = resolve_host(@config[:host])
       File.write(@config[:asset_provider_config], JSON.pretty_generate(asset_provider_config))
+
+      puts "Refreshed #{@config[:asset_provider_config]} and #{@config[:asset_provider_helper_vagrantfile]}"
     end
 
     def create_ssl_artifacts ( cn = 'localhost' )
